@@ -114,13 +114,27 @@ Full contract: [`docs/OUTPUT_LAYOUT.md`](docs/OUTPUT_LAYOUT.md). Design:
 
 Marts are plain SQL files in [`sql/marts/`](sql/marts/); adding one means adding a file.
 
+## Public copy
+
+`teramot-signals publish` builds a read-only copy of the datasets whose terms allow
+redistribution (`publish: true` in their YAML): latest and history Parquet, CSV, a DuckDB file
+with the same views, and a `catalog.json` with each file's sha256 and each dataset's license and
+attribution. Rows that identify natural persons are redacted, and a series that jumps more than
+its `max_change_pct` is held back. Details in
+[`docs/OUTPUT_LAYOUT.md`](docs/OUTPUT_LAYOUT.md#public-copy-teramot-signals-publish).
+
+```bash
+uv run teramot-signals publish --output data --public-url https://example.org/signals/v1 \
+  --staging public                      # add --dest s3://bucket/signals/v1 to upload
+```
+
 ## Project layout
 
 ```
 config/sources/<source>.yaml   datasets, shape, natural key, expected schema, window, description
 src/teramot_signals/
   core/                        http · extraction · normalization · revisions · sink · registry
-                               pipeline · catalog · cli   (knows no specific source)
+                               pipeline · catalog · publish · cli   (knows no specific source)
   sources/<source>/            one package per source: EXTRACTOR + NORMALIZER
 sql/marts/                     derived views over the catalog
 docs/                          architecture, output layout, adding a source, data licenses
@@ -138,7 +152,7 @@ make check        # ruff + basedpyright + pytest (no network)
 ```
 
 `run` exit codes: `0` everything ok or revised · `2` some dataset hit `format_changed` ·
-`1` some dataset `failed`.
+`1` some dataset `failed`. `publish` exits `1` if some dataset was blocked by its checks.
 
 ## Contributing
 

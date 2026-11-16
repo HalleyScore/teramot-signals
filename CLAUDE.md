@@ -26,13 +26,15 @@ anything works.
 - `core/` never imports from `sources/`. Every YAML has its package and vice versa.
 - `provenance` (`official` | `third_party`) travels in every row, the manifest and the contract.
 - `__latest` keeps one row per key; the unsuffixed view keeps the full history.
+- `publish` only ever reads datasets marked `publish: true`, uploads `catalog.json` last, and a
+  dataset that fails its checks keeps its previous public copy.
 - Extractors use `window.reference()` as "today", never `date.today()`.
 
 ## Architecture (summary)
 
 - `core/` — source-agnostic: HTTP (rate limit, retries, pagination, `get_bytes`), extractor
   contract (JSON records or a polars `frame`), normalization, revisions, fsspec sink, registry,
-  pipeline (incremental window via `lookback_days`), DuckDB catalog, CLI.
+  pipeline (incremental window via `lookback_days`), DuckDB catalog, public copy (`publish`), CLI.
 - `sources/<api>/` — one connector per source. `EXTRACTOR` + `NORMALIZER`.
 - `sql/marts/` — derived views over the catalog.
 

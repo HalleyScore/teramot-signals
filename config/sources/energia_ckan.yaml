@@ -8,10 +8,19 @@ description: CKAN portal of the Secretaría de Energía. datastore_search pagina
 rate_limit_per_second: 3
 timeout_seconds: 60
 max_retries: 3
+license: "CC BY 4.0"
+attribution: "Source: Secretaría de Energía"
+terms_url: http://datos.energia.gob.ar/dataset/precios-en-surtidor
 
 datasets:
   pump_prices_current:
     shape: table
+    publish: true
+    # CUITs starting with 20, 23, 24 or 27 belong to natural persons (personal data under
+    # Ley 25.326): the hosted copy drops the identifying columns of those stations.
+    redact:
+      natural_person_cuit: cuit
+      columns: [cuit, empresa, idempresa, direccion, latitud, longitud, geojson]
     path: /api/3/action/datastore_search
     pagination: ckan
     page_limit: 1000

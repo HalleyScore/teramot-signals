@@ -8,10 +8,14 @@ description: Official territorial units of Argentina (IGN, INDEC). Full CSV per 
 rate_limit_per_second: 2
 timeout_seconds: 120
 max_retries: 3
+license: "CC BY 4.0"
+attribution: "Source: Georef, datos.gob.ar"
+terms_url: https://datosgobar.github.io/georef-ar-api/
 
 datasets:
   provinces:
     shape: table
+    publish: true
     path: /georef/provincias.csv
     natural_key: [id]
     provenance: official
@@ -33,6 +37,7 @@ datasets:
 
   departments:
     shape: table
+    publish: true
     path: /georef/departamentos.csv
     natural_key: [id]
     provenance: official
@@ -55,6 +60,7 @@ datasets:
 
   census_localities:
     shape: table
+    publish: true
     path: /georef/localidades_censales.csv
     natural_key: [id]
     provenance: official

@@ -1,12 +1,14 @@
-# Daily run of every source. Each source runs even if another one fails.
+# Daily run of every source, then (optionally) the public copy of the `publish: true` datasets.
+# Each source runs even if another one fails.
 #
-# GitHub configuration (Settings → Secrets and variables → Actions):
-#   Variables:
-#     SIGNALS_OUTPUT_ROOT   destination: s3://<bucket>/<prefix> or gs://<bucket>/<prefix>. Required.
-#     AWS_ROLE_ARN      arn:aws:iam::<account>:role/<role>  OIDC path for S3, no keys. Optional.
-#     AWS_REGION        us-east-1                           optional.
-#   Secrets, only for S3 without AWS_ROLE_ARN:
-#     AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# GitHub configuration: an environment named `publish` (Settings → Environments), restricted to
+# the default branch, with these variables:
+#   SIGNALS_OUTPUT_ROOT   private destination: s3://<bucket>/<prefix> or gs://<bucket>/<prefix>.
+#   AWS_ROLE_ARN          arn:aws:iam::<account>:role/<role>  OIDC path for S3, no keys. Optional.
+#   AWS_REGION            us-east-1                           optional.
+#   SIGNALS_PUBLISH_DEST  public copy: s3://<bucket>/<public-prefix>. Optional; enables `publish`.
+#   SIGNALS_PUBLIC_URL    HTTPS URL that serves SIGNALS_PUBLISH_DEST. Required with it.
+# Secrets, only for S3 without AWS_ROLE_ARN: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
 # Without SIGNALS_OUTPUT_ROOT the job fails explicitly, not silently.
 # For GCS, authenticate with google-github-actions/auth before the run step.
 name: daily-run
@@ -19,14 +21,21 @@ on:
       output:
         description: "Destination (s3://... or gs://...). Defaults to the SIGNALS_OUTPUT_ROOT variable."
         required: false
+      allow_implausible:
+        description: "Publish series that exceed max_change_pct (after checking them by hand)"
+        type: boolean
+        default: false
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -35,8 +44,10 @@ jobs:
     env:
       SIGNALS_OUTPUT_ROOT: ${{ inputs.output || vars.SIGNALS_OUTPUT_ROOT }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install
@@ -44,19 +55,19 @@ jobs:
       - name: Check destination
         run: |
           if [ -z "$SIGNALS_OUTPUT_ROOT" ]; then
-            echo "::error::Missing the SIGNALS_OUTPUT_ROOT variable (Settings → Secrets and variables → Actions → Variables)"
+            echo "::error::Missing the SIGNALS_OUTPUT_ROOT variable (Settings → Environments → publish)"
             exit 1
           fi
           echo "Destination: $SIGNALS_OUTPUT_ROOT"
       - name: AWS credentials (OIDC, no stored keys)
         if: startsWith(env.SIGNALS_OUTPUT_ROOT, 's3://') && vars.AWS_ROLE_ARN != ''
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
       - name: AWS credentials (access keys)
         if: startsWith(env.SIGNALS_OUTPUT_ROOT, 's3://') && vars.AWS_ROLE_ARN == ''
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -64,3 +75,47 @@ jobs:
       - name: Run ${{ matrix.source }}
         # exit 0 ok/revised · 2 format_changed (the job turns red: that is the alert) · 1 failed
         run: uv run teramot-signals run ${{ matrix.source }} --output "$SIGNALS_OUTPUT_ROOT"
+
+  publish:
+    # Runs after every source, even if some failed: their datasets keep the previous public copy.
+    needs: run
+    if: ${{ !cancelled() && vars.SIGNALS_PUBLISH_DEST != '' && !inputs.output }}
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    env:
+      SIGNALS_OUTPUT_ROOT: ${{ vars.SIGNALS_OUTPUT_ROOT }}
+      SIGNALS_PUBLISH_DEST: ${{ vars.SIGNALS_PUBLISH_DEST }}
+      SIGNALS_PUBLIC_URL: ${{ vars.SIGNALS_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+      - run: uv python install
+      - run: uv sync --all-extras
+      - name: AWS credentials (OIDC, no stored keys)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Publish
+        # exit 1 if a dataset was blocked by its checks: the job turns red, the rest is published
+        env:
+          ALLOW_IMPLAUSIBLE: ${{ inputs.allow_implausible }}
+        run: |
+          args=()
+          if [ "$ALLOW_IMPLAUSIBLE" = "true" ]; then args+=(--allow-implausible); fi
+          uv run teramot-signals publish --staging public "${args[@]}"
+      - name: Attest catalog and DuckDB file
+        if: ${{ !cancelled() && hashFiles('public/catalog.json') != '' }}
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: |
+            public/catalog.json
+            public/signals.duckdb

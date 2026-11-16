@@ -9,10 +9,14 @@ description: Time Series API of the Argentine government. No auth. {data[[date,v
 rate_limit_per_second: 4
 timeout_seconds: 30
 max_retries: 3
+license: "CC BY 4.0"
+attribution: "Source: INDEC / SSPM, via datos.gob.ar"
+terms_url: https://datos.gob.ar/
 
 datasets:
   series:
     shape: series
+    publish: true
     path: /series/api/series/
     pagination: start_count
     page_limit: 1000
@@ -38,6 +42,7 @@ datasets:
 
   sspm:
     shape: series
+    publish: true
     path: /series/api/series/
     provenance: official
     declared_freshness: depends on the series (mostly monthly; usd_bna_selling_rate is daily)
@@ -167,6 +172,7 @@ datasets:
 
   sspm_catalog:
     shape: table
+    publish: true
     path: /series/api/series/
     natural_key: [series_id]
     provenance: official

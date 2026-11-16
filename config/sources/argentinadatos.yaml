@@ -8,6 +8,9 @@ description: Open API of Argentine data. No auth. Responses are JSON lists.
 rate_limit_per_second: 4
 timeout_seconds: 20
 max_retries: 3
+license: "No license published"
+attribution: "ArgentinaDatos"
+terms_url: https://argentinadatos.com
 
 datasets:
   holidays:

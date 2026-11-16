@@ -35,3 +35,6 @@ logs/
 # DuckDB catalog
 *.duckdb
 *.duckdb.wal
+
+# Public copy staging folder (`teramot-signals publish`)
+/public/

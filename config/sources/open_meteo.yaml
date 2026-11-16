@@ -10,6 +10,9 @@ description: Daily weather per coordinate. No auth. Several coordinates per requ
 rate_limit_per_second: 1
 timeout_seconds: 60
 max_retries: 3
+license: "CC BY 4.0 data; the free API is for non-commercial use only"
+attribution: "Weather data by Open-Meteo.com"
+terms_url: https://open-meteo.com/en/terms
 
 datasets:
   forecast:

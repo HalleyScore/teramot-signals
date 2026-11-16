@@ -8,10 +8,14 @@ description: Files published by INDEC (XLSX tables, microdata ZIPs).
 rate_limit_per_second: 1
 timeout_seconds: 180
 max_retries: 3
+license: "Free reproduction with attribution"
+attribution: "Source: INDEC"
+terms_url: https://www.indec.gob.ar
 
 datasets:
   supermarkets_by_province:
     shape: table
+    publish: true
     path: /ftp/cuadros/economia/serie_supermercados.xlsx
     natural_key: [date, jurisdiction]
     provenance: official

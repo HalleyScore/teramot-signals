@@ -8,10 +8,14 @@ description: Dataverse API (no auth for public datasets).
 rate_limit_per_second: 1
 timeout_seconds: 60
 max_retries: 3
+license: "CC BY 4.0"
+attribution: "Observatorio Económico Social UNR, doi:10.57715/UNR/BL85Z8"
+terms_url: https://dataverse.unr.edu.ar
 
 datasets:
   eph_dictionary:
     shape: table
+    publish: true
     path: /api/datasets/:persistentId/
     natural_key: [variable, value_position]
     provenance: third_party
