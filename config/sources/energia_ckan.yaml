@@ -1,0 +1,62 @@
+# datos.energia.gob.ar — CKAN datastore. Fuel pump prices.
+# Package `precios-en-surtidor`, license CC-BY-4.0, two resources with datastore. Verified 2026-09-14.
+# NOTE: the portal redirects https → http.
+
+source: energia_ckan
+base_url: http://datos.energia.gob.ar
+description: CKAN portal of the Secretaría de Energía. datastore_search paginated with limit/offset.
+rate_limit_per_second: 3
+timeout_seconds: 60
+max_retries: 3
+
+datasets:
+  pump_prices_current:
+    shape: table
+    path: /api/3/action/datastore_search
+    pagination: ckan
+    page_limit: 1000
+    params:
+      resource_id: 80ac25de-a44a-4445-9215-090cf55cfda5
+    natural_key: [cuit, direccion, idproducto, idtipohorario, indice_tiempo]
+    provenance: official
+    declared_freshness: the resource is updated daily; prices are monthly (indice_tiempo)
+    revision_policy: appends, does not revise; a station may re-report the same month
+    expected_schema:
+      indice_tiempo: str
+      idempresa: number
+      cuit: str
+      empresa: str
+      direccion: str
+      localidad: str
+      provincia: str
+      region: str
+      idproducto: number
+      producto: str
+      idtipohorario: number
+      tipohorario: str
+      precio: number
+      fecha_vigencia: str
+      idempresabandera: number
+      empresabandera: str
+      latitud: number
+      longitud: number
+      geojson: str
+    description: |
+      Current fuel pump prices (Resolution SE 314/2016), one row per station × product ×
+      time-of-day × month. Columns as published by the Secretaría de Energía (Spanish):
+      `precio` is pesos per liter; includes brand (`empresabandera`), province, locality and
+      coordinates. License CC-BY-4.0, Secretaría de Energía.
+
+  pump_prices_history:
+    enabled: false          # millions of rows; enable after the first cut
+    shape: table
+    path: /api/3/action/datastore_search
+    pagination: ckan
+    page_limit: 1000
+    params:
+      resource_id: f8dda0d5-2a9f-4d34-b79b-4e63de3995df
+    natural_key: [cuit, direccion, idproducto, idtipohorario, indice_tiempo]
+    provenance: official
+    declared_freshness: monthly
+    revision_policy: appends, does not revise
+    description: Historical fuel pump prices, same schema as the current one.

@@ -1,0 +1,5 @@
+[
+  {"fecha": "2026-01-01", "tipo": "inamovible", "nombre": "Año nuevo"},
+  {"fecha": "2026-02-16", "tipo": "inamovible", "nombre": "Carnaval"},
+  {"fecha": "2026-03-23", "tipo": "puente", "nombre": "Día no laborable con fines turísticos"}
+]

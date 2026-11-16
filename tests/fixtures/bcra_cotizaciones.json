@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "results": {
+    "fecha": "2026-09-11",
+    "detalle": [
+      {"codigoMoneda": "USD", "descripcion": "DOLAR E.E.U.U.", "tipoPase": 0.0, "tipoCotizacion": 1508.5},
+      {"codigoMoneda": "EUR", "descripcion": "EURO", "tipoPase": 1.1598, "tipoCotizacion": 1749.5583}
+    ]
+  }
+}

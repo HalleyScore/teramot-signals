@@ -1,0 +1,44 @@
+# Dataverse of the Universidad Nacional de Rosario (Observatorio Económico Social). THIRD PARTY.
+# EPH variable dictionary curated from INDEC's documentation. CC BY 4.0.
+# DOI 10.57715/UNR/BL85Z8. Verified live 2026-11-16.
+
+source: unr_dataverse
+base_url: https://dataverse.unr.edu.ar
+description: Dataverse API (no auth for public datasets).
+rate_limit_per_second: 1
+timeout_seconds: 60
+max_retries: 3
+
+datasets:
+  eph_dictionary:
+    shape: table
+    path: /api/datasets/:persistentId/
+    natural_key: [variable, value_position]
+    provenance: third_party
+    declared_freshness: updated when INDEC changes the questionnaire
+    revision_policy: Dataverse dataset versions; the latest one is always downloaded
+    expected_schema:
+      variable: str
+      position: int
+      indec_variable: str
+      type: str
+      label: str
+      description: str
+      base: str
+      category: str
+      section: str
+      methodology: str
+      origin: str
+      value_position: int
+      code: str
+      value_label: str
+      original_value: str
+    options:
+      doi: doi:10.57715/UNR/BL85Z8
+      file: eph_dict_capa1.json
+    description: |
+      EPH dictionary: one row per (variable, value). `code` is INDEC's code («01»), `value_label` its
+      label («GBA») and `original_value` the source text («01 = Gran Buenos Aires»). `methodology` says
+      whether the variable applies before the 2024Q4 questionnaire change (`legacy`), after it (`new`)
+      or always (`both`). Variables without coded values have a null `code`. Labels are in Spanish, as
+      published. Source: Observatorio Económico Social, UNR.

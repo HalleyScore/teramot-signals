@@ -1,0 +1,79 @@
+# Georef — Geographic Data Normalization Service API (datos.gob.ar).
+# Bulk CSV download, no auth. Verified live 2026-11-16. License CC BY 4.0.
+# Columns are passed through as published by Georef (Spanish names).
+
+source: georef
+base_url: https://infra.datos.gob.ar
+description: Official territorial units of Argentina (IGN, INDEC). Full CSV per entity.
+rate_limit_per_second: 2
+timeout_seconds: 120
+max_retries: 3
+
+datasets:
+  provinces:
+    shape: table
+    path: /georef/provincias.csv
+    natural_key: [id]
+    provenance: official
+    declared_freshness: rarely changes
+    revision_policy: name or centroid corrections, without notice
+    expected_schema:
+      categoria: str
+      centroide_lat: number
+      centroide_lon: number
+      fuente: str
+      id: str
+      iso_id: str
+      iso_nombre: str
+      nombre: str
+      nombre_completo: str
+    description: |
+      The 24 jurisdictions (23 provinces and CABA): 2-digit INDEC id, ISO 3166-2 code, name, full
+      name and centroid (lat/lon).
+
+  departments:
+    shape: table
+    path: /georef/departamentos.csv
+    natural_key: [id]
+    provenance: official
+    declared_freshness: rarely changes
+    revision_policy: corrections without notice
+    expected_schema:
+      categoria: str
+      centroide_lat: number
+      centroide_lon: number
+      fuente: str
+      id: str
+      nombre: str
+      nombre_completo: str
+      provincia_id: str
+      provincia_interseccion: number
+      provincia_nombre: str
+    description: |
+      Departments and partidos (second administrative level): 5-digit INDEC id, name, province and
+      centroid.
+
+  census_localities:
+    shape: table
+    path: /georef/localidades_censales.csv
+    natural_key: [id]
+    provenance: official
+    declared_freshness: changes with each census
+    revision_policy: corrections without notice
+    expected_schema:
+      categoria: str
+      centroide_lat: number
+      centroide_lon: number
+      departamento_id: str
+      departamento_nombre: str
+      fuente: str
+      funcion: str
+      gobierno_local_id: str
+      gobierno_local_nombre: str
+      id: str
+      nombre: str
+      provincia_id: str
+      provincia_nombre: str
+    description: |
+      INDEC census localities: 8-digit id, name, category (simple, compound, component), role
+      (department seat, capital), department, local government, province and centroid.

@@ -1,0 +1,36 @@
+{
+ "status": 200,
+ "metadata": {
+  "resultset": {
+   "count": 2,
+   "offset": 0,
+   "limit": 2
+  }
+ },
+ "results": [
+  {
+   "idVariable": 1,
+   "descripcion": "Reservas internacionales",
+   "categoria": "Principales Variables",
+   "tipoSerie": "Saldos",
+   "periodicidad": "D",
+   "unidadExpresion": "En millones de USD",
+   "moneda": "ME",
+   "primerFechaInformada": "1996-01-03",
+   "ultFechaInformada": "2026-11-11",
+   "ultValorInformado": 49336.0
+  },
+  {
+   "idVariable": 4,
+   "descripcion": "Tipo de cambio minorista (promedio vendedor)",
+   "categoria": "Principales Variables",
+   "tipoSerie": "Tipo de cambio",
+   "periodicidad": "D",
+   "unidadExpresion": "Pesos argentinos por dólar estadounidense",
+   "moneda": "ML",
+   "primerFechaInformada": "2010-06-01",
+   "ultFechaInformada": "2026-11-13",
+   "ultValorInformado": 1571.8
+  }
+ ]
+}

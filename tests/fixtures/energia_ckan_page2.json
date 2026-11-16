@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "result": {
+    "total": 3,
+    "fields": [{"id": "indice_tiempo", "type": "text"}, {"id": "precio", "type": "numeric"}],
+    "records": [
+      {"indice_tiempo": "2026-05", "idempresa": 9, "cuit": "30-50000000-1", "empresa": "ESTACION SUR", "direccion": "Ruta 3 km 10", "localidad": "CAÑUELAS", "provincia": "BUENOS AIRES", "region": "PAMPEANA", "idproducto": 2, "producto": "Nafta (súper) entre 92 y 95 Ron", "idtipohorario": 2, "tipohorario": "Diurno", "precio": 1650.5, "fecha_vigencia": "2026-05-02T09:00:00", "idempresabandera": 1, "empresabandera": "YPF", "latitud": -35.05, "longitud": -58.76, "geojson": "{\"type\":\"Point\"}"}
+    ]
+  }
+}

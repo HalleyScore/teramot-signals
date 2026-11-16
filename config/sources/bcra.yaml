@@ -1,0 +1,146 @@
+# BCRA — Banco Central de la República Argentina. Monetary and exchange-rate statistics.
+# Verified live 2026-11-16: Monetary Statistics v4.0 (1610 variables) and Exchange Rate v1.0.
+# Daily runs are incremental (`lookback_days`); the full history is downloaded once with
+# `--since` (e.g. `run bcra --since 1996-01-01`).
+
+source: bcra
+base_url: https://api.bcra.gob.ar
+description: BCRA public APIs. No auth, GET only. Envelope {status, metadata, results}.
+headers:
+  Accept-Language: es-AR
+rate_limit_per_second: 8
+timeout_seconds: 30
+max_retries: 3
+
+datasets:
+  monetary_catalog:
+    shape: table
+    path: /estadisticas/v4.0/monetarias
+    pagination: offset_envelope
+    page_limit: 1000
+    natural_key: [idVariable]
+    provenance: official
+    declared_freshness: daily (the latest value and its date change with every release)
+    revision_policy: descriptions are stable; ultValorInformado changes daily
+    expected_schema:
+      idVariable: int
+      descripcion: str
+      categoria: str
+      tipoSerie: str
+      periodicidad: str
+      unidadExpresion: str
+      moneda: str
+      primerFechaInformada: date
+      ultFechaInformada: date
+      ultValorInformado: number
+    options:
+      kind: monetary_catalog
+    description: |
+      Catalog of BCRA monetary variables (one row per `idVariable`): description, category,
+      frequency, unit, currency, first and last reported date and latest value. Columns as
+      published by the BCRA (Spanish). Use it to pick which ids to add to `monetary_series`.
+
+  monetary_series:
+    shape: series
+    path: /estadisticas/v4.0/Monetarias/{id_variable}
+    pagination: offset_envelope
+    page_limit: 1000            # maximum observed in metadata.resultset.limit
+    lookback_days: 45
+    provenance: official
+    declared_freshness: daily (1-2 business days lag; no holidays, no nulls)
+    revision_policy: the latest value may be corrected; the BCRA does not flag revisions
+    expected_schema:
+      idVariable: int
+      fecha: date
+      valor: number
+    options:
+      kind: monetary_series
+      # idVariable → variable name in the Parquet output. Ids verified against the v4.0 catalog.
+      variables:
+        1: international_reserves_musd
+        4: usd_retail_avg_selling_rate
+        5: usd_wholesale_rate_com_a3500
+        7: badlar_private_banks_apr
+        12: time_deposit_30d_apr
+        14: personal_loans_apr
+        15: monetary_base_mars
+        21: total_deposits_mars
+        26: private_sector_loans_mars
+        27: monthly_inflation_pct
+        28: yoy_inflation_pct
+        29: expected_inflation_12m_pct
+        30: cer
+        31: uva
+        40: icl_rent_index
+        44: tamar_private_banks_apr
+    description: |
+      Key BCRA monetary variables, one row per (variable, date).
+      - international_reserves_musd: international reserves, millions of USD, daily.
+      - usd_retail_avg_selling_rate: pesos per dollar, banks' average selling rate, daily.
+      - usd_wholesale_rate_com_a3500: pesos per dollar, Communication A 3500 reference rate, daily.
+      - badlar_private_banks_apr / tamar_private_banks_apr: wholesale deposit rates, % annual nominal.
+      - time_deposit_30d_apr / personal_loans_apr: interest rates, % annual nominal.
+      - monetary_base_mars / total_deposits_mars / private_sector_loans_mars: millions of pesos.
+      - monthly_inflation_pct / yoy_inflation_pct: CPI change (INDEC, republished by the BCRA).
+      - expected_inflation_12m_pct: median 12-month expectation from the REM survey, %.
+      - cer, uva, icl_rent_index: adjustment indexes (CER, UVA purchasing-power unit in pesos,
+        ICL rental contracts index).
+
+  fx_quotes:
+    shape: series
+    path: /estadisticascambiarias/v1.0/Cotizaciones
+    pagination: none
+    provenance: official
+    declared_freshness: daily (one request returns every currency of the day)
+    revision_policy: no declared revisions
+    expected_schema:
+      codigoMoneda: str
+      descripcion: str
+      tipoPase: number
+      tipoCotizacion: number
+      fecha: date
+    options:
+      kind: fx_quotes
+    description: |
+      Official BCRA exchange rates for the last business day, every currency, two variables per
+      currency: `<ISO>.rate` = pesos per unit of the currency; `<ISO>.usd_parity` = parity
+      against the US dollar. Official rate only (no MEP, CCL or parallel "blue" rate).
+
+  fx_history:
+    shape: series
+    path: /estadisticascambiarias/v1.0/Cotizaciones/{currency}
+    pagination: offset_envelope
+    page_limit: 1000
+    lookback_days: 30
+    provenance: official
+    declared_freshness: daily
+    revision_policy: no declared revisions
+    expected_schema:
+      codigoMoneda: str
+      descripcion: str
+      tipoPase: number
+      tipoCotizacion: number
+      fecha: date
+    options:
+      kind: fx_history
+      currencies: [USD, EUR, BRL, GBP, CNY, CHF, JPY, CLP, UYU, PYG, BOB, CAD, AUD, XAU, XAG]
+    description: |
+      Official exchange-rate history per currency (since 2003 with `--since 2003-01-01`).
+      Same variables as `fx_quotes`: `<ISO>.rate` (pesos per unit) and `<ISO>.usd_parity`
+      (parity against the dollar; for gold and silver, USD per ounce).
+
+  fx_currencies:
+    shape: table
+    path: /estadisticascambiarias/v1.0/Maestros/Divisas
+    pagination: none
+    natural_key: [codigo]
+    provenance: official
+    declared_freshness: rarely changes
+    revision_policy: no declared revisions
+    expected_schema:
+      codigo: str
+      denominacion: str
+    options:
+      kind: fx_currencies
+    description: |
+      BCRA currency master: ISO code (`codigo`) and name (`denominacion`), one row per currency.

@@ -1,0 +1,9 @@
+{
+  "data": [["2026-06-01", 11826.41], ["2026-07-01", 12076.39]],
+  "count": 3,
+  "meta": [
+    {"dataset": {"title": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016", "source": "Instituto Nacional de Estadística y Censos (INDEC)"}},
+    {"field": {"id": "148.3_INIVELNAL_DICI_M_26", "title": "IPC. Nivel General Nacional. Base dic 2016. Mensual", "description": "Índice de precios al consumidor, nivel general, cobertura nacional.", "units": "Índice", "frequency": "R/P1M"}}
+  ],
+  "params": {"ids": "148.3_INIVELNAL_DICI_M_26"}
+}

@@ -1,0 +1,66 @@
+# Daily run of every source. Each source runs even if another one fails.
+#
+# GitHub configuration (Settings → Secrets and variables → Actions):
+#   Variables:
+#     SIGNALS_OUTPUT_ROOT   destination: s3://<bucket>/<prefix> or gs://<bucket>/<prefix>. Required.
+#     AWS_ROLE_ARN      arn:aws:iam::<account>:role/<role>  OIDC path for S3, no keys. Optional.
+#     AWS_REGION        us-east-1                           optional.
+#   Secrets, only for S3 without AWS_ROLE_ARN:
+#     AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# Without SIGNALS_OUTPUT_ROOT the job fails explicitly, not silently.
+# For GCS, authenticate with google-github-actions/auth before the run step.
+name: daily-run
+
+on:
+  schedule:
+    - cron: "0 22 * * *"   # 19:00 ART, after the BCRA daily close (~17:30)
+  workflow_dispatch:
+    inputs:
+      output:
+        description: "Destination (s3://... or gs://...). Defaults to the SIGNALS_OUTPUT_ROOT variable."
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        source:
+          [bcra, datos_gob_ar, energia_ckan, argentinadatos, georef, open_meteo, indec, unr_dataverse]
+    env:
+      SIGNALS_OUTPUT_ROOT: ${{ inputs.output || vars.SIGNALS_OUTPUT_ROOT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install
+      - run: uv sync --all-extras
+      - name: Check destination
+        run: |
+          if [ -z "$SIGNALS_OUTPUT_ROOT" ]; then
+            echo "::error::Missing the SIGNALS_OUTPUT_ROOT variable (Settings → Secrets and variables → Actions → Variables)"
+            exit 1
+          fi
+          echo "Destination: $SIGNALS_OUTPUT_ROOT"
+      - name: AWS credentials (OIDC, no stored keys)
+        if: startsWith(env.SIGNALS_OUTPUT_ROOT, 's3://') && vars.AWS_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: AWS credentials (access keys)
+        if: startsWith(env.SIGNALS_OUTPUT_ROOT, 's3://') && vars.AWS_ROLE_ARN == ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Run ${{ matrix.source }}
+        # exit 0 ok/revised · 2 format_changed (the job turns red: that is the alert) · 1 failed
+        run: uv run teramot-signals run ${{ matrix.source }} --output "$SIGNALS_OUTPUT_ROOT"

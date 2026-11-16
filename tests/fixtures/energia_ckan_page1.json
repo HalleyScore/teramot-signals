@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "result": {
+    "total": 3,
+    "fields": [{"id": "indice_tiempo", "type": "text"}, {"id": "precio", "type": "numeric"}],
+    "records": [
+      {"indice_tiempo": "2026-05", "idempresa": 9001, "cuit": "30-99999999-7", "empresa": "ESTACION DE PRUEBA S.A.", "direccion": "Calle Falsa 123", "localidad": "LOCALIDAD DE PRUEBA", "provincia": "BUENOS AIRES", "region": "PAMPEANA", "idproducto": 19, "producto": "Gas Oil Grado 2", "idtipohorario": 2, "tipohorario": "Diurno", "precio": 2190, "fecha_vigencia": "2026-05-01T12:43:00", "idempresabandera": 28, "empresabandera": "PUMA", "latitud": -34.6, "longitud": -58.5, "geojson": "{\"type\":\"Point\"}"},
+      {"indice_tiempo": "2026-05", "idempresa": 9001, "cuit": "30-99999999-7", "empresa": "ESTACION DE PRUEBA S.A.", "direccion": "Calle Falsa 123", "localidad": "LOCALIDAD DE PRUEBA", "provincia": "BUENOS AIRES", "region": "PAMPEANA", "idproducto": 19, "producto": "Gas Oil Grado 2", "idtipohorario": 3, "tipohorario": "Nocturno", "precio": 2190, "fecha_vigencia": "2026-05-01T12:43:00", "idempresabandera": 28, "empresabandera": "PUMA", "latitud": -34.6, "longitud": -58.5, "geojson": "{\"type\":\"Point\"}"}
+    ]
+  }
+}

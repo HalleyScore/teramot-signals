@@ -1,0 +1,47 @@
+# ArgentinaDatos — holiday calendar. Provenance: THIRD PARTY.
+# Open project (MIT) that aggregates public data; not an official source. The official one
+# (argentina.gob.ar/interior/feriados) has no API. Verified live 2026-09-14.
+
+source: argentinadatos
+base_url: https://api.argentinadatos.com
+description: Open API of Argentine data. No auth. Responses are JSON lists.
+rate_limit_per_second: 4
+timeout_seconds: 20
+max_retries: 3
+
+datasets:
+  holidays:
+    shape: table
+    path: /v1/feriados/{year}
+    natural_key: [fecha, nombre]
+    provenance: third_party
+    declared_freshness: yearly; changes by decree (bridge holidays)
+    revision_policy: bridge holidays are decreed at year end and may move
+    expected_schema:
+      fecha: date
+      tipo: str
+      nombre: str
+      year: int
+    options:
+      years: [current, next]
+    description: |
+      Argentine national holidays, one row per (fecha = date, nombre = name). Columns as
+      published by ArgentinaDatos, plus `year`. `tipo` (type) ∈ inamovible (fixed) |
+      trasladable (movable) | puente (bridge). Third-party source (ArgentinaDatos, MIT).
+      Useful for "sales per business day".
+
+  bank_holidays:
+    shape: table
+    path: /v1/feriados-bancarios/{year}
+    natural_key: [fecha, nombre]
+    provenance: third_party
+    declared_freshness: yearly
+    revision_policy: may change by decree
+    expected_schema:
+      fecha: date
+      nombre: str
+      year: int
+    options:
+      years: [current, next]
+    description: |
+      Bank holidays (days without banking activity), one row per (fecha, nombre). Third-party source.

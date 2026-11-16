@@ -1,0 +1,98 @@
+# INDEC — Instituto Nacional de Estadística y Censos (national statistics office). Files from the
+# public FTP (www.indec.gob.ar/ftp). No API: the published file is downloaded and its structure
+# parsed. Verified live 2026-11-16.
+
+source: indec
+base_url: https://www.indec.gob.ar
+description: Files published by INDEC (XLSX tables, microdata ZIPs).
+rate_limit_per_second: 1
+timeout_seconds: 180
+max_retries: 3
+
+datasets:
+  supermarkets_by_province:
+    shape: table
+    path: /ftp/cuadros/economia/serie_supermercados.xlsx
+    natural_key: [date, jurisdiction]
+    provenance: official
+    declared_freshness: monthly, ~2 months behind
+    revision_policy: INDEC revises the latest months; flagged in revision_of
+    expected_schema:
+      date: date
+      jurisdiction: str
+      sales_total: number
+      stores: number
+      sales_per_store: number
+      floor_area_m2: number
+      sales_per_m2: number
+      transactions: number
+      sales_per_transaction: number
+      sales_total_products: number
+      sales_beverages: number
+      sales_groceries: number
+      sales_bakery: number
+      sales_dairy: number
+      sales_meat: number
+      sales_fruit_vegetables: number
+      sales_prepared_food: number
+      sales_cleaning_personal_care: number
+      sales_clothing_footwear_textiles: number
+      sales_electronics_household: number
+      sales_other: number
+    options:
+      kind: supermarkets_by_province
+    description: |
+      INDEC Supermarket Survey, tables 5 and 6: one row per (month, jurisdiction), since 2017.
+      `jurisdiction` keeps INDEC's labels: «Total del país» (national total), CABA, «24 partidos del
+      Gran Buenos Aires», «Resto de Buenos Aires» and each province. Sales in thousands of current
+      pesos; floor area in m²; sales per m² and per transaction in pesos; stores and transactions in units.
+
+  eph_households:
+    shape: table
+    path: /ftp/cuadros/menusuperior/eph/EPH_usu_{quarter}_Trim_{year}_txt.zip
+    natural_key: [codusu, nro_hogar, ano4, trimestre]
+    allow_new_columns: true
+    provenance: official
+    declared_freshness: quarterly, ~3 months behind
+    revision_policy: not revised; the questionnaire changed in 2024Q4 (columns added and removed)
+    expected_schema:
+      codusu: str
+      nro_hogar: int
+      ano4: int
+      trimestre: int
+      aglomerado: int
+      pondera: int
+    options:
+      kind: eph
+      member: usu_hogar
+      quarters_back: 4
+    description: |
+      EPH (Permanent Household Survey) household file: one row per surveyed household and quarter
+      (31 urban areas). Columns as published by INDEC, lowercased; `pondera` is the expansion factor.
+      Dictionary in `unr_dataverse.eph_dictionary`. Full history with `--since 2016-10-01`.
+
+  eph_individuals:
+    shape: table
+    path: /ftp/cuadros/menusuperior/eph/EPH_usu_{quarter}_Trim_{year}_txt.zip
+    natural_key: [codusu, nro_hogar, componente, ano4, trimestre]
+    allow_new_columns: true
+    provenance: official
+    declared_freshness: quarterly, ~3 months behind
+    revision_policy: not revised; the questionnaire changed in 2024Q4 (columns added and removed)
+    expected_schema:
+      codusu: str
+      nro_hogar: int
+      componente: int
+      ano4: int
+      trimestre: int
+      aglomerado: int
+      pondera: int
+    options:
+      kind: eph
+      member: usu_individual
+      quarters_back: 4
+    description: |
+      EPH individual file: one row per surveyed person and quarter. Employment, income, education,
+      health. Columns as published by INDEC, lowercased. `pondera` (and `pondii`, `pondiio`, `pondih`
+      for income) are expansion factors. Microdata anonymized by INDEC. Dictionary in
+      `unr_dataverse.eph_dictionary`.

@@ -1,0 +1,10 @@
+# Copy to config/settings.yaml (gitignored). The SIGNALS_OUTPUT_ROOT environment variable
+# and the CLI's --output option override `output_root`.
+
+# Where output is written: a local path or an fsspec URI (s3://bucket/prefix with the `s3` extra,
+# gs://bucket/prefix with the `gcs` extra). Credentials come from the environment, never this file.
+output_root: data
+# output_root: s3://my-bucket/argentine-public-data
+
+# Timezone used to resolve `extraction_date`.
+timezone: America/Argentina/Buenos_Aires

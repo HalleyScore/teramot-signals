@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtualenvs / package managers
+.venv/
+venv/
+uv.lock.bak
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.basedpyright/
+.coverage
+htmlcov/
+
+# Secrets & local config (commit only the *.example files)
+.env
+config/settings.yaml
+
+# Local data & logs — never commit extracted data or run logs
+data/
+logs/
+*.parquet
+*.json.gz
+*.log
+
+# OS
+.DS_Store
+
+# DuckDB catalog
+*.duckdb
+*.duckdb.wal

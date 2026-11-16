@@ -1,0 +1,196 @@
+# datos.gob.ar — Time Series API + the `sspm` catalog. Prices, activity, wages, consumption.
+# One API for 31,000+ series from INDEC and other agencies. Maximum limit 1000.
+# `series` requests one series at a time from the API; `sspm` downloads the full history from the
+# catalog's CSV distributions (one download per file). Ids verified live 2026-11-16.
+
+source: datos_gob_ar
+base_url: https://apis.datos.gob.ar
+description: Time Series API of the Argentine government. No auth. {data[[date,value]], count, meta}.
+rate_limit_per_second: 4
+timeout_seconds: 30
+max_retries: 3
+
+datasets:
+  series:
+    shape: series
+    path: /series/api/series/
+    pagination: start_count
+    page_limit: 1000
+    provenance: official
+    declared_freshness: monthly (depends on the series; the API declares `frequency`)
+    revision_policy: INDEC revises foreign trade and activity backwards; the API does not flag it
+    expected_schema:
+      series_id: str
+      variable: str
+      date: date
+      value: number
+    options:
+      # API id → variable name in the Parquet output
+      ids:
+        148.3_INIVELNAL_DICI_M_26: cpi_national_headline
+        103.1_I2N_2016_M_15: cpi_gba_core
+        74.3_IET_0_M_16: exports_total_musd
+        75.3_IETPP_0_M_43: exports_primary_products_musd
+        75.3_ITM_0_M_13: exports_industrial_manufactures_musd
+    description: |
+      Monthly INDEC series republished by datos.gob.ar. Per-variable descriptions come from the
+      API itself (metadata=full) and are appended below.
+
+  sspm:
+    shape: series
+    path: /series/api/series/
+    provenance: official
+    declared_freshness: depends on the series (mostly monthly; usd_bna_selling_rate is daily)
+    revision_policy: INDEC revises activity and consumption backwards; flagged in revision_of
+    expected_schema:
+      series_id: str
+      variable: str
+      date: str
+      value: number
+    options:
+      kind: sspm
+      # API id → [variable in the Parquet output, topic group]
+      series: &sspm_series
+        458.1_VENTAS_TOTADA_0_M_52_56: [shopping_constant_index_seasonally_adjusted, shopping_centers]
+        458.1_VENTAS_TOTNAL_0_M_42_19: [shopping_constant_index_original, shopping_centers]
+        458.1_VENTAS_TOTCLO_0_M_49_19: [shopping_constant_index_trend_cycle, shopping_centers]
+        458.1_VENTAS_GBATES_ABRI_M_29_80: [shopping_gba_constant_prices, shopping_centers]
+        458.1_VENTAS_GBATES_ABRI_M_29_66: [shopping_gba_current_prices, shopping_centers]
+        458.1_VENTAS_RESTES_ABRI_M_31_8: [shopping_rest_of_country_constant_prices, shopping_centers]
+        458.1_VENTAS_RESTES_ABRI_M_31_4: [shopping_rest_of_country_current_prices, shopping_centers]
+        458.1_VENTAS_TOTTES_ABRI_M_33_40: [shopping_sales_constant_prices, shopping_centers]
+        458.1_VENTAS_TOTTES_ABRI_M_33_26: [shopping_sales_current_prices, shopping_centers]
+        458.1_AMOBLAMIENGAR_ABRI_M_39_10: [shopping_furniture_decor_textiles, shopping_centers_category]
+        458.1_DIVERSION_NTO_ABRI_M_23_37: [shopping_entertainment_leisure, shopping_centers_category]
+        458.1_ELECTRONICION_ABRI_M_42_47: [shopping_electronics_appliances, shopping_centers_category]
+        458.1_INDUMENTARRIA_ABRI_M_34_29: [shopping_clothing_footwear_leather, shopping_centers_category]
+        458.1_JUGUETERIARIA_ABRI_M_10_48: [shopping_toys, shopping_centers_category]
+        458.1_LIBRERIA_PRIA_ABRI_M_18_18: [shopping_books_stationery, shopping_centers_category]
+        458.1_OTROSROS_ABRI_M_5_1: [shopping_other_categories, shopping_centers_category]
+        458.1_PATIO_COMIDAS_ABRI_M_13_59: [shopping_food_court, shopping_centers_category]
+        458.1_PERFUMERIACIA_ABRI_M_19_16: [shopping_perfumery_pharmacy, shopping_centers_category]
+        458.1_ROPA_ACCESVOS_ABRI_M_26_72: [shopping_sportswear_accessories, shopping_centers_category]
+        458.1_TOTALTAL_ABRI_M_5_38: [shopping_total_categories, shopping_centers_category]
+        143.3_NO_PR_2004_A_31: [emae_seasonally_adjusted, emae]
+        143.3_NO_PR_2004_A_21: [emae_original, emae]
+        143.3_NO_PR_2004_A_28: [emae_trend_cycle, emae]
+        11.3_SEGA_2004_M_48: [emae_real_estate_business, emae_sector]
+        11.3_C_2004_M_60: [emae_public_administration_defense, emae_sector]
+        11.3_ISOM_2004_M_39: [emae_agriculture_livestock_forestry, emae_sector]
+        11.3_AGCS_2004_M_41: [emae_wholesale_retail_repairs, emae_sector]
+        11.3_VMATC_2004_M_12: [emae_construction, emae_sector]
+        11.3_ITC_2004_M_21: [emae_electricity_gas_water, emae_sector]
+        11.3_CMMR_2004_M_10: [emae_education, emae_sector]
+        11.3_ISD_2004_M_26: [emae_mining_quarrying, emae_sector]
+        11.3_P_2004_M_20: [emae_hotels_restaurants, emae_sector]
+        11.3_IF_2004_M_25: [emae_taxes_net_of_subsidies, emae_sector]
+        11.3_VMASD_2004_M_23: [emae_manufacturing, emae_sector]
+        11.3_IM_2004_M_25: [emae_financial_intermediation, emae_sector]
+        11.3_TAC_2004_M_60: [emae_other_community_personal_services, emae_sector]
+        11.3_VIPAA_2004_M_5: [emae_fishing, emae_sector]
+        11.3_HR_2004_M_24: [emae_social_health_services, emae_sector]
+        11.3_EMC_2004_M_25: [emae_transport_communications, emae_sector]
+        146.3_IALIMENNAL_DICI_M_45: [cpi_national_food_non_alcoholic_beverages, cpi_division]
+        146.3_IBEBIDANAL_DICI_M_39: [cpi_national_alcoholic_beverages_tobacco, cpi_division]
+        146.3_IBIENESNAL_DICI_M_36: [cpi_national_misc_goods_services, cpi_division]
+        146.3_ICOMUNINAL_DICI_M_27: [cpi_national_communication, cpi_division]
+        146.3_IEDUCACNAL_DICI_M_22: [cpi_national_education, cpi_division]
+        146.3_IPRENDANAL_DICI_M_35: [cpi_national_clothing_footwear, cpi_division]
+        146.3_IRECREANAL_DICI_M_31: [cpi_national_recreation_culture, cpi_division]
+        146.3_IRESTAUNAL_DICI_M_33: [cpi_national_restaurants_hotels, cpi_division]
+        146.3_ISALUDNAL_DICI_M_18: [cpi_national_health, cpi_division]
+        146.3_ITRANSPNAL_DICI_M_23: [cpi_national_transport, cpi_division]
+        146.3_IVIVIENNAL_DICI_M_52: [cpi_national_housing_water_electricity_gas, cpi_division]
+        146.3_IALIMENUYO_DICI_M_41: [cpi_cuyo_food_non_alcoholic_beverages, cpi_division_region]
+        146.3_ISALUDUYO_DICI_M_14: [cpi_cuyo_health, cpi_division_region]
+        146.3_IALIMENGBA_DICI_M_40: [cpi_gba_food_non_alcoholic_beverages, cpi_division_region]
+        146.3_ISALUDGBA_DICI_M_13: [cpi_gba_health, cpi_division_region]
+        146.3_IALIMENNEA_DICI_M_40: [cpi_nea_food_non_alcoholic_beverages, cpi_division_region]
+        146.3_ISALUDNEA_DICI_M_13: [cpi_nea_health, cpi_division_region]
+        146.3_IALIMENNOA_DICI_M_40: [cpi_noa_food_non_alcoholic_beverages, cpi_division_region]
+        146.3_ISALUDNOA_DICI_M_13: [cpi_noa_health, cpi_division_region]
+        146.3_ISALUDANA_DICI_M_18: [cpi_pampeana_health, cpi_division_region]
+        146.3_IALIMENNIA_DICI_M_46: [cpi_patagonia_food_non_alcoholic_beverages, cpi_division_region]
+        146.3_ISALUDNIA_DICI_M_19: [cpi_patagonia_health, cpi_division_region]
+        103.1_I2N_2016_M_15: [cpi_gba_core, cpi_headline]
+        147.3_IBIENESNAL_DICI_T_19: [cpi_national_goods, cpi_headline]
+        148.3_IESTACINAL_DICI_M_25: [cpi_national_seasonal, cpi_headline]
+        148.3_INIVELNAL_DICI_M_26: [cpi_national_headline, cpi_headline]
+        148.3_INUCLEONAL_DICI_M_19: [cpi_national_core, cpi_headline]
+        148.3_IREGULANAL_DICI_M_22: [cpi_national_regulated, cpi_headline]
+        147.3_ISERVICNAL_DICI_T_22: [cpi_national_services, cpi_headline]
+        145.3_INGNACUAL_DICI_M_38: [cpi_national_monthly_change_pct, cpi_headline]
+        148.3_INIVELUYO_DICI_M_22: [cpi_cuyo_headline, cpi_region]
+        148.3_INIVELGBA_DICI_M_21: [cpi_gba_headline, cpi_region]
+        148.3_INIVELNEA_DICI_M_21: [cpi_nea_headline, cpi_region]
+        148.3_INIVELNOA_DICI_M_21: [cpi_noa_headline, cpi_region]
+        148.3_INIVELANA_DICI_M_26: [cpi_pampeana_headline, cpi_region]
+        148.3_INIVELNIA_DICI_M_27: [cpi_patagonia_headline, cpi_region]
+        149.1_SOR_PRIADO_OCTU_0_28: [wage_index_private_unregistered, wages]
+        149.1_SOR_PRIADO_OCTU_0_25: [wage_index_private_registered, wages]
+        149.1_SOR_PUBICO_OCTU_0_14: [wage_index_public, wages]
+        149.1_TL_REGIADO_OCTU_0_16: [wage_index_registered, wages]
+        149.1_TL_INDIIOS_OCTU_0_21: [wage_index_total, wages]
+        158.1_REPTE_0_0_5: [ripte, wages]
+        455.1_VENTAS_PREADA_0_M_44_44: [supermarket_sales_constant_index_seasonally_adjusted, supermarkets]
+        455.1_VENTAS_PRENAL_0_M_34_10: [supermarket_sales_constant_index_original, supermarkets]
+        455.1_VENTAS_PRECLO_0_M_41_19: [supermarket_sales_constant_index_trend_cycle, supermarkets]
+        455.1_VENTAS_PRETES_0_M_25_98: [supermarket_sales_constant_prices, supermarkets]
+        455.1_VENTAS_PRETES_0_M_25_30: [supermarket_sales_current_prices, supermarkets]
+        455.1_ALIMENTOS_RIA_0_M_30_74: [supermarket_prepared_food_deli, supermarkets_category]
+        455.1_ALMACENCEN_0_M_7_95: [supermarket_grocery, supermarkets_category]
+        455.1_BEBIDASDAS_0_M_7_9: [supermarket_beverages, supermarkets_category]
+        455.1_CARNESNES_0_M_6_38: [supermarket_meat, supermarkets_category]
+        455.1_ELECTRONICGAR_0_M_28_99: [supermarket_electronics_home_goods, supermarkets_category]
+        455.1_INDUMENTARGAR_0_M_35_24: [supermarket_clothing_footwear_textiles, supermarkets_category]
+        455.1_LACTEOSEOS_0_M_7_27: [supermarket_dairy, supermarkets_category]
+        455.1_ARTICULOS_RIA_0_M_29_41: [supermarket_cleaning_perfumery, supermarkets_category]
+        455.1_OTROSROS_0_M_5_60: [supermarket_other_items, supermarkets_category]
+        455.1_PANADERIARIA_0_M_9_14: [supermarket_bakery, supermarkets_category]
+        455.1_SUBTOTAL_VDAS_0_M_33_47: [supermarket_subtotal_food_beverages, supermarkets_category]
+        455.1_VENTAS_TOTLOS_0_M_30_43: [supermarket_sales_total_by_category, supermarkets_category]
+        455.1_VERDULERIARIA_0_M_19_68: [supermarket_produce, supermarkets_category]
+        455.1_CANALES_ONINE_0_M_15_84: [supermarket_channel_online, supermarkets_channel]
+        455.1_SALON_VENTTAS_0_M_12_82: [supermarket_channel_in_store, supermarkets_channel]
+        455.1_VENTAS_TOTNTA_0_M_26_88: [supermarket_sales_total_by_channel, supermarkets_channel]
+        455.1_EFECTIVOIVO_0_M_8_15: [supermarket_payment_cash, supermarkets_payment_method]
+        455.1_OTROS_MEDIIOS_0_M_12_32: [supermarket_payment_other, supermarkets_payment_method]
+        455.1_TARJETAS_CITO_0_M_16_85: [supermarket_payment_credit_card, supermarkets_payment_method]
+        455.1_TARJETAS_DITO_0_M_15_92: [supermarket_payment_debit_card, supermarkets_payment_method]
+        455.1_VENTAS_TOTAGO_0_M_25_99: [supermarket_sales_total_by_payment_method, supermarkets_payment_method]
+        168.1_T_CAMBIOR_D_0_0_26: [usd_bna_selling_rate, exchange_rate]
+    description: |
+      Full history of 108 series from the catalog of the Subsecretaría de Programación
+      Macroeconómica (CPI by region and division, EMAE economic activity and sectors, wages and
+      RIPTE, supermarkets, shopping centers, BNA exchange rate). One row per (variable, date).
+      Units and original source per variable below and in `sspm_catalog`. License CC BY 4.0.
+
+  sspm_catalog:
+    shape: table
+    path: /series/api/series/
+    natural_key: [series_id]
+    provenance: official
+    declared_freshness: changes when a new data point is published (end_date)
+    revision_policy: catalog metadata; titles or distributions may change
+    expected_schema:
+      series_id: str
+      variable: str
+      group: str
+      title: str
+      description: str
+      unit: str
+      frequency: str
+      start_date: date
+      end_date: date
+      dataset_title: str
+      source: str
+      publisher: str
+      license: str
+      distribution_url: str
+    options:
+      kind: sspm_catalog
+      series: *sspm_series
+    description: |
+      Metadata for the `sspm` series: topic group, the agency's title and description (Spanish),
+      unit, frequency (ISO 8601), first and last date, dataset, primary source, license and
+      source CSV.

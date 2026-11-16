@@ -1,0 +1,140 @@
+# Open-Meteo — daily weather per locality. Provenance: THIRD PARTY.
+# Data CC BY 4.0 (attribution: Open-Meteo.com, ERA5/Copernicus and the national models).
+# The free API is for NON-COMMERCIAL use only (open-meteo.com/en/terms); commercial use needs a
+# paid plan or a self-hosted instance (the server is AGPL). Verified live 2026-11-16.
+# The 74 localities are Georef centroids (provincial capitals and large urban areas).
+
+source: open_meteo
+base_url: https://api.open-meteo.com
+description: Daily weather per coordinate. No auth. Several coordinates per request.
+rate_limit_per_second: 1
+timeout_seconds: 60
+max_retries: 3
+
+datasets:
+  forecast:
+    shape: table
+    path: /v1/forecast
+    natural_key: [locality_id, date]
+    provenance: third_party
+    declared_freshness: hourly; one run is kept per day (extraction_date = run date)
+    revision_policy: each run replaces the forecast; differences between runs are recorded as revisions
+    expected_schema:
+      locality_id: str
+      locality: str
+      province: str
+      lat: number
+      lon: number
+      date: date
+      temp_max: number
+      temp_min: number
+      temp_mean: number
+      precipitation_mm: number
+    options:
+      kind: forecast
+      forecast_days: 16
+      localities: &localities
+        - {id: "06028010", name: "Almirante Brown", province: "Buenos Aires", lat: -34.79801, lon: -58.36751}
+        - {id: "06035010", name: "Avellaneda", province: "Buenos Aires", lat: -34.66269, lon: -58.34118}
+        - {id: "06056010", name: "Bahía Blanca", province: "Buenos Aires", lat: -38.71009, lon: -62.25307}
+        - {id: "06091010", name: "Berazategui", province: "Buenos Aires", lat: -34.76979, lon: -58.15526}
+        - {id: "06252010", name: "Escobar", province: "Buenos Aires", lat: -34.34605, lon: -58.77946}
+        - {id: "06260010", name: "Esteban Echeverría", province: "Buenos Aires", lat: -34.81935, lon: -58.46591}
+        - {id: "06270010", name: "Ezeiza", province: "Buenos Aires", lat: -34.85439, lon: -58.52476}
+        - {id: "06274010", name: "Florencio Varela", province: "Buenos Aires", lat: -34.80437, lon: -58.25872}
+        - {id: "06364030", name: "General Rodríguez", province: "Buenos Aires", lat: -34.60643, lon: -58.94522}
+        - {id: "06371010", name: "General San Martín", province: "Buenos Aires", lat: -34.55285, lon: -58.53375}
+        - {id: "06408010", name: "Hurlingham", province: "Buenos Aires", lat: -34.58987, lon: -58.62815}
+        - {id: "06410010", name: "Ituzaingó", province: "Buenos Aires", lat: -34.63606, lon: -58.66101}
+        - {id: "06412010", name: "José C. Paz", province: "Buenos Aires", lat: -34.51187, lon: -58.74977}
+        - {id: "06427010", name: "La Matanza", province: "Buenos Aires", lat: -34.67755, lon: -58.56097}
+        - {id: "06441030", name: "La Plata", province: "Buenos Aires", lat: -34.92135, lon: -57.9545}
+        - {id: "06434010", name: "Lanús", province: "Buenos Aires", lat: -34.70559, lon: -58.39113}
+        - {id: "06490010", name: "Lomas de Zamora", province: "Buenos Aires", lat: -34.75493, lon: -58.40269}
+        - {id: "06497060", name: "Luján", province: "Buenos Aires", lat: -34.54688, lon: -59.02365}
+        - {id: "06515010", name: "Malvinas Argentinas", province: "Buenos Aires", lat: -34.48728, lon: -58.70051}
+        - {id: "06357110", name: "Mar del Plata", province: "Buenos Aires", lat: -37.99761, lon: -57.54815}
+        - {id: "06539010", name: "Merlo", province: "Buenos Aires", lat: -34.66498, lon: -58.72795}
+        - {id: "06560010", name: "Moreno", province: "Buenos Aires", lat: -34.61066, lon: -58.78947}
+        - {id: "06568010", name: "Morón", province: "Buenos Aires", lat: -34.64859, lon: -58.61986}
+        - {id: "06595070", name: "Olavarría", province: "Buenos Aires", lat: -36.86585, lon: -60.16034}
+        - {id: "06623100", name: "Pergamino", province: "Buenos Aires", lat: -33.89111, lon: -60.56451}
+        - {id: "06638040", name: "Pilar", province: "Buenos Aires", lat: -34.4482, lon: -58.90339}
+        - {id: "06658010", name: "Quilmes", province: "Buenos Aires", lat: -34.71886, lon: -58.26037}
+        - {id: "06749010", name: "San Fernando", province: "Buenos Aires", lat: -34.4406, lon: -58.55802}
+        - {id: "06756010", name: "San Isidro", province: "Buenos Aires", lat: -34.46643, lon: -58.50969}
+        - {id: "06760010", name: "San Miguel", province: "Buenos Aires", lat: -34.54304, lon: -58.69151}
+        - {id: "06763050", name: "San Nicolás de los Arroyos", province: "Buenos Aires", lat: -33.32758, lon: -60.21087}
+        - {id: "06791050", name: "Tandil", province: "Buenos Aires", lat: -37.32866, lon: -59.13399}
+        - {id: "06805010", name: "Tigre", province: "Buenos Aires", lat: -34.42265, lon: -58.58088}
+        - {id: "06840010", name: "Tres de Febrero", province: "Buenos Aires", lat: -34.5963, lon: -58.56096}
+        - {id: "06861010", name: "Vicente López", province: "Buenos Aires", lat: -34.50894, lon: -58.48615}
+        - {id: "06882050", name: "Zárate", province: "Buenos Aires", lat: -34.08158, lon: -59.02432}
+        - {id: "10049030", name: "San Fernando del Valle de Catamarca", province: "Catamarca", lat: -28.46801, lon: -65.77892}
+        - {id: "22140060", name: "Resistencia", province: "Chaco", lat: -27.44341, lon: -58.98645}
+        - {id: "26021030", name: "Comodoro Rivadavia", province: "Chubut", lat: -45.83416, lon: -67.48216}
+        - {id: "26077030", name: "Rawson", province: "Chubut", lat: -43.29946, lon: -65.1037}
+        - {id: "02007010", name: "Ciudad de Buenos Aires", province: "Ciudad Autónoma de Buenos Aires", lat: -34.60638, lon: -58.37172}
+        - {id: "18021020", name: "Corrientes", province: "Corrientes", lat: -27.46328, lon: -58.78889}
+        - {id: "14014010", name: "Córdoba", province: "Córdoba", lat: -31.40421, lon: -64.18355}
+        - {id: "14098230", name: "Río Cuarto", province: "Córdoba", lat: -33.12366, lon: -64.349}
+        - {id: "30015060", name: "Concordia", province: "Entre Ríos", lat: -31.381, lon: -58.01701}
+        - {id: "30084160", name: "Paraná", province: "Entre Ríos", lat: -31.74015, lon: -60.50558}
+        - {id: "34014020", name: "Formosa", province: "Formosa", lat: -26.18247, lon: -58.17435}
+        - {id: "38021060", name: "San Salvador de Jujuy", province: "Jujuy", lat: -24.18581, lon: -65.29427}
+        - {id: "42021020", name: "Santa Rosa", province: "La Pampa", lat: -36.6204, lon: -64.2903}
+        - {id: "46014010", name: "La Rioja", province: "La Rioja", lat: -29.41279, lon: -66.85372}
+        - {id: "50021010", name: "Godoy Cruz", province: "Mendoza", lat: -32.92533, lon: -68.84096}
+        - {id: "50028020", name: "Guaymallén", province: "Mendoza", lat: -32.89342, lon: -68.77496}
+        - {id: "50049050", name: "Las Heras", province: "Mendoza", lat: -32.84048, lon: -68.82833}
+        - {id: "50063090", name: "Luján de Cuyo", province: "Mendoza", lat: -33.00636, lon: -68.87955}
+        - {id: "50070060", name: "Maipú", province: "Mendoza", lat: -32.9631, lon: -68.78174}
+        - {id: "50007010", name: "Mendoza", province: "Mendoza", lat: -32.88284, lon: -68.84444}
+        - {id: "50098100", name: "San Martín - La Colonia", province: "Mendoza", lat: -33.06282, lon: -68.47054}
+        - {id: "50105210", name: "San Rafael", province: "Mendoza", lat: -34.60741, lon: -68.32917}
+        - {id: "54028030", name: "Posadas", province: "Misiones", lat: -27.36643, lon: -55.89398}
+        - {id: "58035070", name: "Neuquén", province: "Neuquén", lat: -38.94265, lon: -68.05914}
+        - {id: "62021060", name: "San Carlos de Bariloche", province: "Río Negro", lat: -41.12292, lon: -71.31012}
+        - {id: "62007090", name: "Viedma", province: "Río Negro", lat: -40.8083, lon: -62.99467}
+        - {id: "66028050", name: "Salta", province: "Salta", lat: -24.7831, lon: -65.41029}
+        - {id: "70077010", name: "Rawson", province: "San Juan", lat: -31.57089, lon: -68.51696}
+        - {id: "70028010", name: "San Juan", province: "San Juan", lat: -31.53307, lon: -68.52502}
+        - {id: "74056150", name: "San Luis", province: "San Luis", lat: -33.30207, lon: -66.33647}
+        - {id: "74035070", name: "Villa Mercedes", province: "San Luis", lat: -33.67015, lon: -65.4622}
+        - {id: "78021040", name: "Río Gallegos", province: "Santa Cruz", lat: -51.62341, lon: -69.21586}
+        - {id: "82084270", name: "Rosario", province: "Santa Fe", lat: -32.94704, lon: -60.63318}
+        - {id: "82063170", name: "Santa Fe", province: "Santa Fe", lat: -31.61408, lon: -60.69832}
+        - {id: "86035090", name: "La Banda", province: "Santiago del Estero", lat: -27.73065, lon: -64.24336}
+        - {id: "86049110", name: "Santiago del Estero", province: "Santiago del Estero", lat: -27.78764, lon: -64.25967}
+        - {id: "94015020", name: "Ushuaia", province: "Tierra del Fuego", lat: -54.8074, lon: -68.30376}
+        - {id: "90084010", name: "San Miguel de Tucumán", province: "Tucumán", lat: -26.83039, lon: -65.20378}
+    description: |
+      16-day daily forecast per locality (Open-Meteo best_match model): maximum, minimum and mean
+      temperature (°C) and precipitation (mm). One row per (locality, date) in each extraction;
+      `extraction_date` is the date of the forecast run.
+
+  observed:
+    shape: table
+    path: https://archive-api.open-meteo.com/v1/archive
+    natural_key: [locality_id, date]
+    lookback_days: 10
+    provenance: third_party
+    declared_freshness: daily, ~5 days behind (ERA5 reanalysis)
+    revision_policy: preliminary ERA5T is replaced by final ERA5 after ~2-3 months
+    expected_schema:
+      locality_id: str
+      locality: str
+      province: str
+      lat: number
+      lon: number
+      date: date
+      temp_max: number
+      temp_min: number
+      temp_mean: number
+      precipitation_mm: number
+    options:
+      kind: observed
+      localities: *localities
+    description: |
+      Observed daily weather per locality (ERA5 reanalysis): maximum, minimum and mean temperature (°C)
+      and precipitation (mm). History back to 1940 with `--since`; the daily run requests the last 10 days.
