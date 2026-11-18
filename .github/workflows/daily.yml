@@ -2,7 +2,8 @@
 # Each source runs even if another one fails.
 #
 # GitHub configuration: an environment named `publish` (Settings → Environments), restricted to
-# the default branch, with these variables:
+# the default branch, which the OIDC role trusts. Repository variables (job-level `if` cannot read
+# environment variables):
 #   SIGNALS_OUTPUT_ROOT   private destination: s3://<bucket>/<prefix> or gs://<bucket>/<prefix>.
 #   AWS_ROLE_ARN          arn:aws:iam::<account>:role/<role>  OIDC path for S3, no keys. Optional.
 #   AWS_REGION            us-east-1                           optional.
@@ -55,7 +56,7 @@ jobs:
       - name: Check destination
         run: |
           if [ -z "$SIGNALS_OUTPUT_ROOT" ]; then
-            echo "::error::Missing the SIGNALS_OUTPUT_ROOT variable (Settings → Environments → publish)"
+            echo "::error::Missing the SIGNALS_OUTPUT_ROOT repository variable"
             exit 1
           fi
           echo "Destination: $SIGNALS_OUTPUT_ROOT"
