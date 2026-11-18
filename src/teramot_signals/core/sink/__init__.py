@@ -17,6 +17,7 @@ from typing import Any
 
 import fsspec
 import polars as pl
+from fsspec.implementations.local import LocalFileSystem
 
 _PART_RE = re.compile(r"part-(\d+)\.parquet$")
 
@@ -26,6 +27,11 @@ class Sink:
         fs, base = fsspec.core.url_to_fs(root)
         self.fs = fs
         self.base = base.rstrip("/")
+
+    def _ensure_dir(self, path: str) -> None:
+        # Object stores have no directories; s3fs.makedirs would try CreateBucket.
+        if isinstance(self.fs, LocalFileSystem):
+            self.fs.makedirs(path, exist_ok=True)
 
     # ── paths ───────────────────────────────────────────────────────────────
     def dataset_dir(self, source: str, dataset: str) -> str:
@@ -80,7 +86,7 @@ class Sink:
         manifest: dict[str, Any],
     ) -> str:
         pdir = self.partition_dir(source, dataset, extraction_date)
-        self.fs.makedirs(pdir, exist_ok=True)
+        self._ensure_dir(pdir)
         n = len(self._parts(pdir))
         path = f"{pdir}/part-{n}.parquet"
         if self.fs.exists(path):  # never overwrite
@@ -103,13 +109,13 @@ class Sink:
 
     def append_contract(self, source: str, dataset: str, entry: dict[str, Any]) -> None:
         d = self.dataset_dir(source, dataset)
-        self.fs.makedirs(d, exist_ok=True)
+        self._ensure_dir(d)
         entries = [*self.read_contract(source, dataset), entry]
         with self.fs.open(f"{d}/_contract.json", "w", encoding="utf-8") as fh:
             json.dump(entries, fh, ensure_ascii=False, indent=2, default=str)
 
     def write_description(self, source: str, dataset: str, text: str) -> None:
         d = self.dataset_dir(source, dataset)
-        self.fs.makedirs(d, exist_ok=True)
+        self._ensure_dir(d)
         with self.fs.open(f"{d}/_description.md", "w", encoding="utf-8") as fh:
             fh.write(text)
