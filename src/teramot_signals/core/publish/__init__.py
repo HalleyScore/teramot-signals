@@ -291,7 +291,8 @@ def _upload(staging: Path, dest: str, rels: list[str]) -> None:
     remote = not isinstance(fs, LocalFileSystem)
     for rel in rels:
         target = f"{base}/{rel}"
-        fs.makedirs(target.rsplit("/", 1)[0], exist_ok=True)
+        if not remote:
+            fs.makedirs(target.rsplit("/", 1)[0], exist_ok=True)
         extra: dict[str, str] = {}
         if remote:
             extra = {
