@@ -113,6 +113,10 @@ def test_publish_stages_uploads_and_redacts(
     history = pl.read_parquet(dest / "history" / "energia_ckan__pump_prices_current.parquet")
     assert history["cuit"].drop_nulls().to_list() == ["30-71234567-8"]
 
+    page = (dest / "index.html").read_text(encoding="utf-8")
+    assert f"{URL}/latest/bcra__fx_history.csv" in page and "personal data removed" in page
+    assert "PEREZ" not in page and "<script" not in page
+
     csv = (dest / "latest" / "energia_ckan__pump_prices_current.csv").read_text(encoding="utf-8")
     assert "'=HYPERLINK" in csv and "PEREZ" not in csv and "20-12345678-9" not in csv
 

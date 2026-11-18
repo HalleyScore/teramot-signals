@@ -7,6 +7,7 @@ Layout under the destination (e.g. `s3://bucket/signals/v1`, served over HTTPS):
   history/<source>__<dataset>.parquet  every extraction, revisions included
   signals.duckdb                       views over the files above, plus marts
   catalog.json                         per file: sha256, bytes, rows; per dataset: license
+  index.html                           human-readable page rendered from the catalog
 
 Everything is built and checked in a local staging folder first. Only then are the files
 uploaded, `catalog.json` last, so a reader never sees a catalog that points at missing files.
@@ -29,6 +30,7 @@ from fsspec.implementations.local import LocalFileSystem
 from teramot_signals.core.catalog import _empty_select, _lit, _q, _remote_setup, _root_uri
 from teramot_signals.core.config import DatasetConfig, Redaction, Settings, SourceConfig
 from teramot_signals.core.normalization import SERIES_KEY
+from teramot_signals.core.publish.page import render_index
 from teramot_signals.core.registry import available_sources, load_source_config
 from teramot_signals.core.sink import Sink
 
@@ -42,6 +44,7 @@ _CONTENT_TYPES = {
     ".csv": "text/csv; charset=utf-8",
     ".json": "application/json",
     ".duckdb": "application/octet-stream",
+    ".html": "text/html; charset=utf-8",
 }
 
 
@@ -374,8 +377,9 @@ def publish(
     (staging / "catalog.json").write_text(
         json.dumps(catalog, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
     )
+    (staging / "index.html").write_text(render_index(catalog), encoding="utf-8")
     if dest:
-        rels = [*fresh, "signals.duckdb", "catalog.json"]
+        rels = [*fresh, "signals.duckdb", "index.html", "catalog.json"]
         _upload(staging, dest, rels)
         out.uploaded = rels
     return out
