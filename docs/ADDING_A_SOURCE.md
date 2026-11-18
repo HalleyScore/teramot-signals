@@ -15,6 +15,9 @@ Adding an API is **additive**: a new package under `sources/` and a new YAML und
    source: <api>                     # must match the file name and the package name
    base_url: https://...
    rate_limit_per_second: 4
+   license: "CC BY 4.0"              # as declared by the publisher
+   attribution: "Source: ..."
+   terms_url: https://...
    datasets:
      <dataset>:
        shape: series | table
@@ -29,6 +32,11 @@ Adding an API is **additive**: a new package under `sources/` and a new YAML und
        allow_new_columns: false      # true only if the agency adds columns on purpose
        lookback_days: 30             # without --since, request only the last N days
        options: {...}                # whatever the extractor needs (ids, variables, years)
+       publish: false                # true only if the terms allow redistribution (see step 6)
+       max_change_pct: 50            # series only: `publish` blocks larger moves
+       redact:                       # only if rows can identify a natural person
+         natural_person_cuit: cuit
+         columns: [cuit, name]
        description: |
          What this table is, in plain words, with units.
    ```
@@ -54,7 +62,9 @@ Adding an API is **additive**: a new package under `sources/` and a new YAML und
    `_contract.json` and `_description.md`, and query it with `catalog --output /tmp/x` +
    `sql "select * from <api>__<dataset>__latest limit 5"`.
 
-6. **Document the license** in `docs/DATA_LICENSES.md`.
+6. **Document the license** in `docs/DATA_LICENSES.md` and in the YAML (`license`,
+   `attribution`, `terms_url`). Mark a dataset `publish: true` only if its terms allow
+   redistribution and it holds no personal data (or `redact` removes it).
 
 ## Per-API checklist
 

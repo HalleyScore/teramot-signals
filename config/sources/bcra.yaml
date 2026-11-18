@@ -11,10 +11,14 @@ headers:
 rate_limit_per_second: 8
 timeout_seconds: 30
 max_retries: 3
+license: "BCRA legal notice: reuse allowed for informational, educational or academic purposes with attribution and without alteration; commercial or advertising use requires express BCRA authorization"
+attribution: "Source: BCRA"
+terms_url: https://www.bcra.gob.ar/aviso-legal/
 
 datasets:
   monetary_catalog:
     shape: table
+    publish: true
     path: /estadisticas/v4.0/monetarias
     pagination: offset_envelope
     page_limit: 1000
@@ -42,6 +46,7 @@ datasets:
 
   monetary_series:
     shape: series
+    publish: true
     path: /estadisticas/v4.0/Monetarias/{id_variable}
     pagination: offset_envelope
     page_limit: 1000            # maximum observed in metadata.resultset.limit
@@ -88,6 +93,8 @@ datasets:
 
   fx_quotes:
     shape: series
+    publish: true
+    max_change_pct: 300
     path: /estadisticascambiarias/v1.0/Cotizaciones
     pagination: none
     provenance: official
@@ -108,6 +115,8 @@ datasets:
 
   fx_history:
     shape: series
+    publish: true
+    max_change_pct: 300
     path: /estadisticascambiarias/v1.0/Cotizaciones/{currency}
     pagination: offset_envelope
     page_limit: 1000
@@ -131,6 +140,7 @@ datasets:
 
   fx_currencies:
     shape: table
+    publish: true
     path: /estadisticascambiarias/v1.0/Maestros/Divisas
     pagination: none
     natural_key: [codigo]

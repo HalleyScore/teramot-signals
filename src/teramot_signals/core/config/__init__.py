@@ -17,6 +17,13 @@ Pagination = Literal["none", "offset_envelope", "start_count", "ckan"]
 SCHEMA_TYPES = ("str", "int", "number", "bool", "list", "dict", "date")
 
 
+class Redaction(BaseModel):
+    """Rows whose `natural_person_cuit` is a natural person's CUIT get `columns` nulled."""
+
+    natural_person_cuit: str
+    columns: list[str]
+
+
 class DatasetConfig(BaseModel):
     enabled: bool = True
     shape: Shape
@@ -35,6 +42,12 @@ class DatasetConfig(BaseModel):
     # Without --since, the run requests only the last N days (incremental). None = everything.
     lookback_days: int | None = None
     options: dict[str, Any] = Field(default_factory=dict)
+    # `publish` command: only datasets marked `publish: true` leave the private output root.
+    publish: bool = False
+    redact: Redaction | None = None
+    # Series only: block publication if any variable moves more than this between its last two
+    # dates. Guards the hosted copy against a corrupt or tampered upstream response.
+    max_change_pct: float | None = None
 
     @model_validator(mode="after")
     def _check(self) -> DatasetConfig:
@@ -43,6 +56,8 @@ class DatasetConfig(BaseModel):
         bad = [f"{k}: {v}" for k, v in self.expected_schema.items() if v not in SCHEMA_TYPES]
         if bad:
             raise ValueError(f"unsupported types in expected_schema: {bad}")
+        if self.max_change_pct is not None and self.shape != "series":
+            raise ValueError("`max_change_pct` only applies to `series` datasets")
         return self
 
 
@@ -54,6 +69,9 @@ class SourceConfig(BaseModel):
     rate_limit_per_second: float = 5.0
     timeout_seconds: float = 30.0
     max_retries: int = 3
+    license: str = ""
+    attribution: str = ""
+    terms_url: str = ""
     datasets: dict[str, DatasetConfig]
 
 

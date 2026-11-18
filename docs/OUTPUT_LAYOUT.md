@@ -135,6 +135,39 @@ Use `__latest` for "today's value": a daily load that is re-run, or a series dow
 every day, does not duplicate rows, because the view keeps the latest extraction for each key.
 The full history stays in the unsuffixed view.
 
+## Public copy (`teramot-signals publish`)
+
+A read-only copy for people who do not want to run the extractors. Only datasets marked
+`publish: true` in their YAML are included; the private output root keeps everything.
+
+```
+<dest>/
+  catalog.json                          # what is published: license, attribution, columns, rows,
+                                        # last extraction, and sha256 + bytes of every file
+  signals.duckdb                        # views over the files below, plus the marts
+  latest/<source>__<dataset>.parquet    # one row per key (same as the `__latest` view)
+  latest/<source>__<dataset>.csv        # same rows; text starting with = + - @ gets a leading '
+  history/<source>__<dataset>.parquet   # every extraction, revisions included
+```
+
+- **Built locally first.** Everything is written to `--staging` and checked there; then the files
+  are uploaded to `--dest` (`SIGNALS_PUBLISH_DEST`), `catalog.json` last.
+- **Checks.** A dataset with no rows, a series that moves more than `max_change_pct` between its
+  last two dates, or a redaction that left a natural-person CUIT behind is **blocked**: it keeps
+  its previously published files and catalog entry, and the command exits `1`.
+  `--allow-implausible` publishes a large move after checking it by hand.
+- **Redaction.** `redact` nulls the listed columns on rows whose CUIT belongs to a natural person
+  (prefixes 20, 23, 24, 27), in both `latest` and `history`.
+- **DuckDB file.** Its views read `getvariable('signals_base')`, defaulting to `--public-url`:
+
+  ```sql
+  ATTACH '<public-url>/signals.duckdb' AS signals (READ_ONLY);
+  SELECT * FROM signals.bcra__fx_quotes__latest;
+  -- a local mirror of <dest>: SET VARIABLE signals_base = '/path/to/mirror';
+  ```
+
+  Datasets that are not published are empty views with their columns, so marts still compile.
+
 ## Out of scope
 
 Business joins (sales in dollars per business day, prices against CPI, freight against diesel)

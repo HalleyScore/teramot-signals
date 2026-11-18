@@ -1,4 +1,5 @@
-"""CLI: `run` downloads, `catalog` builds the DuckDB file, `sql` queries it, `list` sources."""
+"""CLI: `run` downloads, `catalog` builds the DuckDB file, `sql` queries it, `publish` builds the
+public copy, `list` sources."""
 
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from teramot_signals.core.catalog import build_catalog
 from teramot_signals.core.config import load_settings
 from teramot_signals.core.extraction import Window
 from teramot_signals.core.pipeline import exit_code, run_source
+from teramot_signals.core.publish import publish as publish_copy
 from teramot_signals.core.registry import available_sources
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -100,3 +102,44 @@ def sql(
         con.sql(query).show(max_rows=limit, max_width=200)
     finally:
         con.close()
+
+
+@app.command()
+def publish(
+    public_url: Annotated[
+        str,
+        typer.Option(envvar="SIGNALS_PUBLIC_URL", help="HTTPS URL the destination is served at"),
+    ],
+    dest: Annotated[
+        str | None,
+        typer.Option(
+            envvar="SIGNALS_PUBLISH_DEST", help="Upload here (s3://…); omit to stage only"
+        ),
+    ] = None,
+    staging: Annotated[Path, typer.Option(help="Local build folder")] = Path("public"),
+    marts: Annotated[Path, typer.Option(help="SQL marts folder")] = Path("sql/marts"),
+    config_dir: Annotated[Path, typer.Option()] = Path("config"),
+    output: Annotated[str | None, typer.Option(help="Private output root to read")] = None,
+    allow_implausible: Annotated[
+        bool, typer.Option(help="Publish series even if they exceed max_change_pct")
+    ] = False,
+) -> None:
+    """Public copy of the `publish: true` datasets: Parquet, CSV, DuckDB and catalog.json."""
+    settings = load_settings(config_dir, output)
+    res = publish_copy(
+        settings,
+        staging,
+        public_url,
+        dest=dest,
+        marts_dir=marts if marts.exists() else None,
+        allow_implausible=allow_implausible,
+    )
+    for name in res.published:
+        typer.echo(f"{name}\tpublished")
+    for name, reason in res.blocked.items():
+        kept = " (previous version kept)" if name in res.carried_over else ""
+        typer.echo(f"{name}\tblocked\t{reason}{kept}")
+    typer.echo(
+        f"staged in {staging}" + (f", uploaded {len(res.uploaded)} files to {dest}" if dest else "")
+    )
+    raise typer.Exit(code=1 if res.blocked else 0)
