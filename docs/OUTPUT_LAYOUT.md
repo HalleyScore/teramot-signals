@@ -144,6 +144,7 @@ A read-only copy for people who do not want to run the extractors. Only datasets
 <dest>/
   catalog.json                          # what is published: license, attribution, columns, rows,
                                         # last extraction, and sha256 + bytes of every file
+  index.html                            # human-readable page rendered from catalog.json
   signals.duckdb                        # views over the files below, plus the marts
   latest/<source>__<dataset>.parquet    # one row per key (same as the `__latest` view)
   latest/<source>__<dataset>.csv        # same rows; text starting with = + - @ gets a leading '

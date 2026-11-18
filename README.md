@@ -118,8 +118,8 @@ Marts are plain SQL files in [`sql/marts/`](sql/marts/); adding one means adding
 
 `teramot-signals publish` builds a read-only copy of the datasets whose terms allow
 redistribution (`publish: true` in their YAML): latest and history Parquet, CSV, a DuckDB file
-with the same views, and a `catalog.json` with each file's sha256 and each dataset's license and
-attribution. Rows that identify natural persons are redacted, and a series that jumps more than
+with the same views, a `catalog.json` with each file's sha256 and each dataset's license and
+attribution, and an `index.html` that lists it all for people. Rows that identify natural persons are redacted, and a series that jumps more than
 its `max_change_pct` is held back. Details in
 [`docs/OUTPUT_LAYOUT.md`](docs/OUTPUT_LAYOUT.md#public-copy-teramot-signals-publish).
 
